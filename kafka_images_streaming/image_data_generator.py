@@ -13,11 +13,11 @@ class ImageDataGenerator:
     def __init__(self, customer_id):
         self.customer_id = customer_id
         self.producer = KafkaProducer(
-            bootstrap_servers=["localhost:9092"],
+            bootstrap_servers="localhost:9092",
             value_serializer=lambda v: json.dumps(v).encode("utf-8"),
         )
 
-    def generate_image_data(self) -> np.ndarray:
+    def generate_random_image(self) -> np.ndarray:
         # Generate a random image-like array of shape (1920, 1080, 3)
         image_data = np.random.randint(
             low=0, high=256, size=(1920, 1080, 3), dtype=np.uint8
@@ -28,19 +28,25 @@ class ImageDataGenerator:
         self.customer_id = new_customer_id
 
     def stream_images(self):
+        msg_index = 1
         while True:
             # Generate image data
-            image_data = self.generate_image_data()
+            image_data = self.generate_random_image()
             # Print image shape and data type for debugging / checking
             print(f"Image shape: {image_data.shape}, Data type: {image_data.dtype}")
 
             # Convert the image data to a list to make it serializable
-            image_data_list = image_data.tolist()
+            image_data_bytes = image_data.tobytes()
             # Create a message to send to Kafka
-            message = {"customer_id": self.customer_id, "image_data": image_data_list}
+            message = {
+                "customer_id": self.customer_id, 
+                "message_index": msg_index,
+                # "image": image_data_bytes.hex(),
+            }
             # Send the message to Kafka topic 'data-stream'
             self.producer.send("data-stream", value=message)
 
+            msg_index += 1
             # Wait for 1 second to generate an image every second
             time.sleep(1)
 

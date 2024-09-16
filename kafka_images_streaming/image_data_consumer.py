@@ -26,9 +26,8 @@ class ImageDataConsumer:
 
     def consume_and_store(self):
         for message in self.consumer:
-            # Decode the received message
+            # Decode the received message and then call the function to test and store it
             data = message.value
-            # Store the data in MongoDB
             self.store_image_data(data)
 
     def store_image_data(self, data):

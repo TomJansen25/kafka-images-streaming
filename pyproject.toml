@@ -6,7 +6,7 @@ authors = ["Tom Jansen <tomjansen25@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.10, <3.12"
 numpy = "^2.1.1"
 kafka-python = "^2.0.2"
 pymongo = "^4.8.0"
