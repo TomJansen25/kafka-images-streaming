@@ -3,11 +3,11 @@ import time
 
 import numpy as np
 from kafka import KafkaConsumer
+from loguru import logger
 from pydantic import ValidationError
 from pymongo import MongoClient
 
 from kafka_images_streaming.image_data_model import ImageDataModel
-from loguru import logger
 
 
 class ImageDataConsumer:

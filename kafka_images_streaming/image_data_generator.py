@@ -1,7 +1,7 @@
-import cv2
 import json
 import time
 
+import cv2
 import numpy as np
 from kafka import KafkaProducer
 from loguru import logger
@@ -13,8 +13,7 @@ class ImageDataGenerator:
     """
 
     def __init__(self, customer_id: str, use_kafka_producer: bool = True):
-        """
-        """
+        """ """
         self.customer_id = customer_id
         self.use_kafka_producer = use_kafka_producer
         if use_kafka_producer:
@@ -30,7 +29,9 @@ class ImageDataGenerator:
         )
         if resize:
             # Resize + interpolate image to 1/4 of the size to make it fit in a Kafka message
-            image_data = cv2.resize(image_data, (480, 270), interpolation=cv2.INTER_AREA)
+            image_data = cv2.resize(
+                image_data, (480, 270), interpolation=cv2.INTER_AREA
+            )
         return image_data
 
     def update_customer_id(self, new_customer_id):
@@ -67,5 +68,5 @@ class ImageDataGenerator:
 # Example usage
 if __name__ == "__main__":
     # Initialize the generator with a random Customer ID C1 and start streaming
-    generator = ImageDataGenerator(customer_id="C1")
+    generator = ImageDataGenerator(customer_id="C1", use_kafka_producer=False)
     generator.stream_images()
