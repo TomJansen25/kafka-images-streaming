@@ -1,10 +1,12 @@
 import json
-import time
 from datetime import datetime
 
 import numpy as np
 from kafka import KafkaConsumer
+from pydantic import ValidationError
 from pymongo import MongoClient
+
+from kafka_images_streaming.image_data_model import ImageDataModel
 
 
 class ImageDataConsumer:
@@ -39,19 +41,26 @@ class ImageDataConsumer:
         return image_data_array
 
     def store_image_data(self, data: dict):
-        # Prepare document with metadata
-        image_data_array = self.decode_image_data(data["image_data"])
+        try:
+            # Prepare document with metadata
+            validated_consumed_data = ImageDataModel(**data)
+            image_data_array = self.decode_image_data(
+                validated_consumed_data.image_data
+            )
 
-        document = {
-            "customer_id": data.get("customer_id"),
-            "image_data": image_data_array.tolist(),  # Store as a list for MongoDB compatibility
-            "produced_timestamp": data.get("timestamp"),
-            "consumed_timestamp": datetime.now().isoformat(),
-            "additional_info": data.get("additional_info", {}),
-        }
-        # Insert document into MongoDB
-        self.collection.insert_one(document)
-        print(f"Stored image data for Customer ID: {data['customer_id']}")
+            document = {
+                "customer_id": validated_consumed_data.customer_id,
+                "image_data": image_data_array.tolist(),  # Store as a list for MongoDB compatibility
+                "produced_timestamp": image_data_array.timestamp,
+                "consumed_timestamp": datetime.now().isoformat(),
+            }
+            # Insert document into MongoDB
+            self.collection.insert_one(document)
+            print(f"Stored image data for Customer ID: {data['customer_id']}")
+        except ValidationError as e:
+            print(f"Validation error: {e}")
+        except Exception as e:
+            print(f"Failed to store image data: {e}")
 
     def consume_and_store(self):
         for message in self.consumer:
