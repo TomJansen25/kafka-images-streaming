@@ -2,6 +2,7 @@ import json
 import time
 from datetime import datetime
 
+import numpy as np
 from kafka import KafkaConsumer
 from pymongo import MongoClient
 
@@ -18,30 +19,45 @@ class ImageDataConsumer:
         )
 
         # MongoDB setup
-        self.client = MongoClient(
+        self.db_client = MongoClient(
             host="localhost", port=27017, username="root", password="example"
         )
-        self.db = self.client["image_data_store"]
+        self.db = self.db_client["mydb"]
         self.collection = self.db["images"]
 
-    def consume_and_store(self):
-        for message in self.consumer:
-            # Decode the received message and then call the function to test and store it
-            data = message.value
-            self.store_image_data(data)
+    def decode_image_data(self, image_hex_string: str) -> np.ndarray:
+        """
+        Decodes the hex-encoded image data back to its original NumPy array format.
+        """
+        # Convert hex string back to bytes
+        image_data_bytes = bytes.fromhex(image_hex_string)
+        # Convert bytes back to a NumPy array with the original shape (1920, 1080, 3)
+        image_data_array = np.frombuffer(image_data_bytes, dtype=np.uint8).reshape(
+            (1920, 1080, 3)
+        )
 
-    def store_image_data(self, data):
+        return image_data_array
+
+    def store_image_data(self, data: dict):
         # Prepare document with metadata
+        image_data_array = self.decode_image_data(data["image_data"])
+
         document = {
-            "customer_id": data["customer_id"],
-            "image_data": data["image_data"],  # Store image data in BSON format
-            "creation_timestamp": datetime.now().isoformat(),
-            "storage_timestamp": datetime.now().isoformat(),
+            "customer_id": data.get("customer_id"),
+            "image_data": image_data_array.tolist(),  # Store as a list for MongoDB compatibility
+            "produced_timestamp": data.get("timestamp"),
+            "consumed_timestamp": datetime.now().isoformat(),
             "additional_info": data.get("additional_info", {}),
         }
         # Insert document into MongoDB
         self.collection.insert_one(document)
         print(f"Stored image data for Customer ID: {data['customer_id']}")
+
+    def consume_and_store(self):
+        for message in self.consumer:
+            # Decode the received message and then call the function to test and store it
+            data: dict = message.value
+            self.store_image_data(data)
 
 
 if __name__ == "__main__":

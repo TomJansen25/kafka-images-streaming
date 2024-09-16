@@ -39,9 +39,10 @@ class ImageDataGenerator:
             image_data_bytes = image_data.tobytes()
             # Create a message to send to Kafka
             message = {
-                "customer_id": self.customer_id, 
+                "customer_id": self.customer_id,
                 "message_index": msg_index,
-                # "image": image_data_bytes.hex(),
+                "image": image_data_bytes.hex(),
+                "timestamp": time.time(),
             }
             # Send the message to Kafka topic 'data-stream'
             self.producer.send("data-stream", value=message)
