@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "kafka-images-streaming"
 version = "0.1.0"
-description = ""
+description = "Simple showcase project to use Python + Kafka + MongoDB setup for image streaming"
 authors = ["Tom Jansen <tomjansen25@gmail.com>"]
 readme = "README.md"
 
@@ -12,7 +12,13 @@ kafka-python = "^2.0.2"
 pymongo = "^4.8.0"
 matplotlib = "^3.9.2"
 pydantic = "^2.9.1"
+opencv-python = "^4.10.0.84"
+loguru = "^0.7.2"
 
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+jupyterlab = "^4.2.5"
 
 [build-system]
 requires = ["poetry-core"]
